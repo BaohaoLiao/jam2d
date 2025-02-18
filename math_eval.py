@@ -59,7 +59,12 @@ def parse_args():
 
 
 def prepare_data(data_name, args):
-    examples = load_data(data_name, args.split, args.data_dir)
+    if "math500_level" in data_name:
+        level = int(data_name.strip[-1])
+        examples = load_data("math500", args.split, args.data_dir)
+        examples = [example for example in examples if example["level"]==level]
+    else:
+        examples = load_data(data_name, args.split, args.data_dir)
 
     # sample `num_test_sample` from dataset
     if args.num_test_sample > 0:
