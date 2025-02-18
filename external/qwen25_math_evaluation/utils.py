@@ -178,13 +178,13 @@ PROMPT_TEMPLATES = {
     ),
     "deepseek-r1": (
         "<｜begin▁of▁sentence｜>Please reason step by step, and put your final answer within \\boxed{{}}."
-        "<｜User｜>{input}<｜Assistant｜><think>\n"
+        "<｜User｜>{input}<｜Assistant｜><think>\n",
         "{output}",
         "\n\n",
     ),
     "deepseek-r1-no-think": (
         "<｜begin▁of▁sentence｜>Please reason step by step, and put your final answer within \\boxed{{}}."
-        "<｜User｜>{input}<｜Assistant｜><think>\n\n</think>"
+        "<｜User｜>{input}<｜Assistant｜><think>\n\n</think>",
         "{output}",
         "\n\n",
     ),
