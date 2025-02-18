@@ -60,7 +60,7 @@ def parse_args():
 
 def prepare_data(data_name, args):
     if "math500_level" in data_name:
-        level = int(data_name.strip[-1])
+        level = int(data_name.strip()[-1])
         examples = load_data("math500", args.split, args.data_dir)
         examples = [example for example in examples if example["level"]==level]
     else:
