@@ -185,6 +185,7 @@ def get_response(args, data_name, llm, tokenizer, executor, prompts):
     think_sums_lens = [[] for _ in prompts]
     preds = [[] for _ in prompts]  # extracted preds from think_sums, the last one is the original 1D one
     responses = [[] for _ in prompts]  # original 1D response
+    responses_lens = [[] for _ in prompts]
     for i, prompt in tqdm(enumerate(prompts), total=len(prompts)):
         non_stop = True
         prev_response = ""
@@ -208,20 +209,19 @@ def get_response(args, data_name, llm, tokenizer, executor, prompts):
             else:
                 think_sum = prev_response.split("</think>")[-1]
                 non_stop = False
-                
-            print(think_sum)
 
             think_sums[i].append(think_sum)
             think_sums_lens[i].append(len(tokenizer.encode(think_sum)))
             pred = run_execute(executor, think_sum, args.prompt_type, data_name)[0]
             preds[i].append(pred)
+            responses_lens[i].append(len(tokenizer.encode(prev_response)))
 
             prompt_resp = prompt + prev_response
 
             if len(tokenizer.encode(prev_response)) > args.max_tokens_per_call - 10: # 10 for additional budget
                 non_stop = True
         
-    return think_sums, think_sums_lens, preds, responses
+    return think_sums, think_sums_lens, preds, responses, responses_lens
         
 
 def main(llm, tokenizer, data_name, args):
@@ -326,7 +326,7 @@ def main(llm, tokenizer, data_name, args):
 
         # get all outputs
         prompts = [item[1] for item in current_prompts]
-        think_sums, think_sums_lens, sub_preds, responses = get_response(
+        think_sums, think_sums_lens, sub_preds, responses, responses_lens = get_response(
             args, data_name, llm, tokenizer, executor, prompts
         ) 
 
@@ -335,7 +335,7 @@ def main(llm, tokenizer, data_name, args):
     # put results back to examples
     all_samples = []
     for i, sample in enumerate(samples):
-        preds = [item[-1] for item in sub_preds]
+        preds = sub_preds[i]
         for j in range(len(preds)):
             if sample["gt"] in ["A", "B", "C", "D", "E"] and preds[j] not in [
                 "A",
@@ -344,7 +344,7 @@ def main(llm, tokenizer, data_name, args):
                 "D",
                 "E",
             ]:
-                preds[j] = choice_answer_clean(think_sums[i][-1])
+                preds[j] = choice_answer_clean(think_sums[i][j])
             elif is_multi_choice(sample["gt"]) and not is_multi_choice(preds[j]):
                 # remove any non-choice char
                 preds[j] = "".join(
@@ -355,9 +355,10 @@ def main(llm, tokenizer, data_name, args):
         sample.update({
             "code": responses[i], 
             "think_sums": think_sums[i],
+            "response_lens": responses_lens[i],
             "think_sums_lens": think_sums_lens[i], 
-            "sub_preds": sub_preds[i],
-            "pred": preds, 
+            "sub_preds": preds,
+            "pred": preds[-1], 
             "gt": sample["gt"], 
         })
         all_samples.append(sample)
