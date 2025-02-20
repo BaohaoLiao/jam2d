@@ -219,7 +219,7 @@ def get_response(args, data_name, llm, tokenizer, executor, prompts):
             prompt_resp = prompt + prev_response
 
             if len(tokenizer.encode(prev_response)) > args.max_tokens_per_call - 10: # 10 for additional budget
-                non_stop = True
+                non_stop = False
         
     return think_sums, think_sums_lens, preds, responses, responses_lens
         
