@@ -164,7 +164,7 @@ def is_multi_choice(answer):
     return True
 
 
-def get_response(args, llm, tokenizer, executor, prompts):
+def get_response(args, data_name, llm, tokenizer, executor, prompts):
     step_sampling_params = SamplingParams(
         temperature=args.temperature,
         top_p=args.top_p,
@@ -213,7 +213,7 @@ def get_response(args, llm, tokenizer, executor, prompts):
 
             think_sums[i].append(think_sum)
             think_sums_lens[i].append(len(tokenizer.encode(think_sum)))
-            pred = run_execute(executor, think_sum, args.prompt_type, args.data_name)[0]
+            pred = run_execute(executor, think_sum, args.prompt_type, data_name)[0]
             preds[i].append(pred)
 
             prompt_resp = prompt + prev_response
@@ -327,7 +327,7 @@ def main(llm, tokenizer, data_name, args):
         # get all outputs
         prompts = [item[1] for item in current_prompts]
         think_sums, think_sums_lens, sub_preds, responses = get_response(
-            args, llm, tokenizer, executor, prompts
+            args, data_name, llm, tokenizer, executor, prompts
         ) 
 
     time_use = time.time() - start_time
