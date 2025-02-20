@@ -189,7 +189,7 @@ def get_response(args, llm, tokenizer, executor, prompts):
     think_sums_lens = [[] for _ in prompts]
     preds = [[] for _ in prompts]  # extracted preds from think_sums, the last one is the original 1D one
     responses = [[] for _ in prompts]  # original 1D response
-    for i, prompt in enumerate(prompts):
+    for i, prompt in tqdm(enumerate(prompts), total=len(prompts)):
         non_stop = True
         prev_response = ""
         prompt_resp = prompt + prev_response
