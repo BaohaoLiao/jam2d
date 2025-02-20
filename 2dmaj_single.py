@@ -128,11 +128,7 @@ def setup(args):
             trust_remote_code=True,
             enable_prefix_caching=True,
         )
-        tokenizer = None
-        if args.apply_chat_template:
-            tokenizer = AutoTokenizer.from_pretrained(
-                args.model_name_or_path, trust_remote_code=True
-            )
+        tokenizer = llm.get_tokenizer()
     else:
         llm, tokenizer = load_hf_lm_and_tokenizer(
             model_name_or_path=args.model_name_or_path,
@@ -213,6 +209,8 @@ def get_response(args, llm, tokenizer, executor, prompts):
                 think_sum = prev_response.split("</think>")[-1]
                 non_stop = False
                 
+            print(think_sum)
+
             think_sums[i].append(think_sum)
             think_sums_lens[i].append(len(tokenizer.encode(think_sum)))
             pred = run_execute(executor, think_sum, args.prompt_type, args.data_name)[0]
