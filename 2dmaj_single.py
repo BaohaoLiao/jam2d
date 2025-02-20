@@ -358,8 +358,7 @@ def main(llm, tokenizer, data_name, args):
             "response_lens": responses_lens[i],
             "think_sums_lens": think_sums_lens[i], 
             "sub_preds": preds,
-            "pred": preds[-1], 
-            "gt": sample["gt"], 
+            "pred": [preds[-1]], 
         })
         all_samples.append(sample)
 
