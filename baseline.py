@@ -316,7 +316,8 @@ def main(llm, tokenizer, data_name, args):
     # add processed samples
     all_samples, result_json = obtain_scores(
         samples=all_samples, 
-        data_name=data_name
+        data_name=data_name,
+        n_sampling=args.n_sampling,
     )
 
     # save outputs
