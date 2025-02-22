@@ -141,6 +141,7 @@ def parse_gt(example, data_name):
     return str(parsed_gt_ans[0]).lower()
 
 def extract_pred_and_parse(code, data_name):
+    print(code)
     pred = parse(
         code, 
         extraction_config=[
@@ -150,6 +151,7 @@ def extract_pred_and_parse(code, data_name):
             ),
         ]
     )
+    print(pred)
     if pred:
         str(pred[0]).lower()
     else:
