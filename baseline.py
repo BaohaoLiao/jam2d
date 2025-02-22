@@ -138,7 +138,7 @@ def parse_gt(gt_ans, data_name):
         ]
     )
     if len(parsed_gt_ans) == 0:
-        print(gt_ans)
+        print("???????", gt_ans)
     assert len(parsed_gt_ans) > 0
     return parsed_gt_ans
 
