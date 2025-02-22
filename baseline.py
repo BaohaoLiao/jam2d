@@ -119,7 +119,7 @@ def setup(args):
     # print all results
     pad = max([len(data_name) for data_name in data_list])
     print("\t".join(data_name.ljust(pad, " ") for data_name in data_list))
-    print("\t".join([f"{result['acc']:.1f}".ljust(pad, " ") for result in results]))
+    print("\t".join([f"{result['acc']:.2f}".ljust(pad, " ") for result in results]))
 
 
 def is_multi_choice(answer):
@@ -185,7 +185,7 @@ def obtain_scores(samples, data_name, n_sampling=1):
 
     result_json = {
         "num_samples": len(correctnesses),
-        "acc": float(f"{sum(correctnesses) / len(correctnesses):.2f}"),
+        "acc": float(f"{sum(correctnesses) / len(correctnesses):.4f}") * 100,
     }
 
     if n_sampling > 1:
@@ -197,7 +197,7 @@ def obtain_scores(samples, data_name, n_sampling=1):
             new_all_samples.append(sample)
             maj_correctnesses.append(maj_score)
 
-        result_json["maj_acc"] = float(f"{sum(maj_correctnesses) / len(maj_correctnesses):.2f}")
+        result_json["maj_acc"] = float(f"{sum(maj_correctnesses) / len(maj_correctnesses):.4f}") * 100
         all_samples = new_all_samples
 
     return all_samples, result_json
