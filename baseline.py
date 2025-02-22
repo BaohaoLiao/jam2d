@@ -109,17 +109,30 @@ def setup(args):
         results.append(main(llm, tokenizer, data_name, args))
 
     # add "avg" result to data_list and results
-    data_list.append("avg")
-    results.append(
-        {
-            "acc": sum([result["acc"] for result in results]) / len(results),
-        }
-    )
+    if args.n_sampling == 1:
+        data_list.append("avg")
+        results.append(
+            {
+                "acc": sum([result["acc"] for result in results]) / len(results),
+            }
+        )
 
-    # print all results
-    pad = max([len(data_name) for data_name in data_list])
-    print("\t".join(data_name.ljust(pad, " ") for data_name in data_list))
-    print("\t".join([f"{result['acc']:.2f}".ljust(pad, " ") for result in results]))
+        # print all results
+        pad = max([len(data_name) for data_name in data_list])
+        print("\t".join(data_name.ljust(pad, " ") for data_name in data_list))
+        print("\t".join([f"{result['acc']:.2f}".ljust(pad, " ") for result in results]))
+    else:
+        data_list.append("avg")
+        results.append(
+            {
+                "maj_acc": sum([result["maj_acc"] for result in results]) / len(results),
+            }
+        )
+
+        # print all results
+        pad = max([len(data_name) for data_name in data_list])
+        print("\t".join(data_name.ljust(pad, " ") for data_name in data_list))
+        print("\t".join([f"{result['maj_acc']:.2f}".ljust(pad, " ") for result in results]))
 
 
 def is_multi_choice(answer):
