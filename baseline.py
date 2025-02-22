@@ -197,9 +197,9 @@ def obtain_scores(samples, data_name, n_sampling=1):
         orig_preds = sample["pred"]
         orig_gt_ans = sample["gt_ans"]
         sample.pop("pred")
-        sample.pop("gt_ans")
+        sample.pop("gt")
         sample.update({
-            "gt_ans": str(orig_gt_ans[0]),
+            "gt": str(orig_gt_ans[0]),
             "pred": [str(pred[0]) if pred else "" for pred in orig_preds]
         })
 
