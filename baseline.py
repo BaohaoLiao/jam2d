@@ -2,9 +2,10 @@ import random
 import os
 import argparse
 import time
-from vllm import LLM, SamplingParams
 from datetime import datetime
 from tqdm import tqdm
+from collections import Counter
+from vllm import LLM, SamplingParams
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -140,6 +141,7 @@ def parse_gt(example, data_name):
     assert len(parsed_gt_ans) > 0
     return str(parsed_gt_ans[0]).lower()
 
+
 def extract_pred_and_parse(code, data_name):
     if "boxed" in code:
         pred = parse(
@@ -158,6 +160,20 @@ def extract_pred_and_parse(code, data_name):
     else:
         return ""
 
+
+def get_most_common_pred_score(preds, scores):
+    valid_pairs = [(pred, score) for pred, score in zip(preds, scores) if pred != ""]
+    if not valid_pairs:
+        return "", False
+    
+    valid_preds = [pair[0] for pair in valid_pairs]
+    most_common_pred = Counter(valid_preds).most_common(1)[0][0]
+    for pred, score in valid_pairs:
+        if pred == most_common_pred:
+            return pred, score
+    return "", False
+
+
 def obtain_scores(samples, data_name, n_sampling=1):
     all_samples = []
     correctnesses = []
@@ -172,15 +188,19 @@ def obtain_scores(samples, data_name, n_sampling=1):
         "acc": float(f"{sum(correctnesses) / len(correctnesses):.2f}"),
     }
 
-    """
     if n_sampling > 1:
         new_all_samples = []
+        maj_correctnesses = []
         for sample in all_samples:
-    """
+            maj_pred, maj_score = get_most_common_pred_score(sample["pred"], sample["score"])
+            sample.update({"maj_pred": maj_pred, "maj_score": maj_score})
+            new_all_samples.append(sample)
+            maj_correctnesses.append(maj_score)
+
+        result_json["maj_acc"] = float(f"{sum(maj_correctnesses) / len(maj_correctnesses):.2f}")
+        all_samples = new_all_samples
 
     return all_samples, result_json
-
-
 
 
 def main(llm, tokenizer, data_name, args):
