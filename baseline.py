@@ -143,7 +143,7 @@ def is_multi_choice(answer):
 
 def parse_gt(example, data_name):
     parsed_gt_ans = parse(
-        "$" + example["answer"] + "$", # latex format
+        example["gt_cot"],
         extraction_config=[
             LatexExtractionConfig(
                 boxed_match_priority=0,
