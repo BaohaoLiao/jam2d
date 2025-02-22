@@ -128,7 +128,7 @@ def is_multi_choice(answer):
     return True
 
 def parse_gt(gt_ans, data_name):
-    gt_ans = parse(
+    parsed_gt_ans = parse(
         "$" + gt_ans + "$", 
         extraction_config=[
             LatexExtractionConfig(
@@ -137,10 +137,10 @@ def parse_gt(gt_ans, data_name):
             ),
         ]
     )
-    if len(gt_ans) == 0:
+    if len(parsed_gt_ans) == 0:
         print(gt_ans)
-    assert len(gt_ans) > 0
-    return gt_ans
+    assert len(parsed_gt_ans) > 0
+    return parsed_gt_ans
 
 def extract_pred_and_parse(code, data_name):
     pred = parse(
