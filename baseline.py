@@ -151,9 +151,8 @@ def extract_pred_and_parse(code, data_name):
             ),
         ]
     )
-    print(pred)
     if pred:
-        str(pred[0]).lower()
+        return str(pred[0]).lower()
     else:
         return ""
 
