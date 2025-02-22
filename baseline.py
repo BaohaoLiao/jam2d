@@ -219,7 +219,7 @@ def obtain_scores(samples, data_name, n_sampling=1):
 def main(llm, tokenizer, data_name, args):
     examples, out_file = prepare_data(data_name, args)
     print("=" * 50)
-    print("data:", data_name, " ,remain samples:", len(examples))
+    print("data:", data_name, " , #samples:", len(examples))
     if len(examples) > 0:
         print(examples[0])
 
