@@ -168,7 +168,6 @@ def obtain_scores(samples, data_name):
         "num_samples": len(correctnesses),
         "acc": sum(correctnesses) / len(correctnesses),
     }
-
     return all_samples, result_json
 
 
