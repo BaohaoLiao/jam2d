@@ -224,7 +224,7 @@ def main(llm, tokenizer, data_name, args):
         print(examples[0])
 
     samples = []
-    for example in tqdm(examples, total=len(examples)):
+    for i, example in tqdm(enumerate(examples), total=len(examples)):
         idx = example["idx"]
 
         # parse question and answer
@@ -237,7 +237,7 @@ def main(llm, tokenizer, data_name, args):
         
         full_prompt = construct_prompt(example, data_name, args)
 
-        if idx == args.start:
+        if i == args.start:
             print(full_prompt)
 
         sample = {
