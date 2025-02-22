@@ -193,6 +193,16 @@ def obtain_scores(samples, data_name, n_sampling=1):
         scores = [verify(sample["pred"][i], sample["gt"]) for i in range(len(sample["pred"]))]
         correctnesses.append(scores[0])
         sample.update({"score": scores})
+
+        orig_preds = sample["pred"]
+        orig_gt_ans = sample["gt_ans"]
+        sample.pop("pred")
+        sample.pop("gt_ans")
+        sample.update({
+            "gt_ans": str(orig_gt_ans[0]),
+            "pred": [str(pred[0]) if pred else "" for pred in orig_preds]
+        })
+
         all_samples.append(sample)
 
     result_json = {
