@@ -232,8 +232,9 @@ def main(llm, tokenizer, data_name, args):
         if example["question"] == "":
             continue
         gt_cot, _ = parse_ground_truth(example, data_name)
+        example["gt_cot"] = gt_cot
         gt_ans = parse_gt(example, data_name)
-        example["gt_ans"] = gt_ans
+        
         full_prompt = construct_prompt(example, data_name, args)
 
         if idx == args.start:
