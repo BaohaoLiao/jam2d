@@ -154,7 +154,7 @@ def parse_gt(example, data_name):
         ]
     )
     assert len(parsed_gt_ans) > 0
-    return str(parsed_gt_ans[0]).lower()
+    return parsed_gt_ans
 
 
 def extract_pred_and_parse(code, data_name):
@@ -168,12 +168,9 @@ def extract_pred_and_parse(code, data_name):
                 ),
             ]
         )
-        if pred:
-            return str(pred[0]).lower()
-        else:
-            return ""
+        return pred
     else:
-        return ""
+        return []
 
 
 def get_most_common_pred_score(preds, scores):
@@ -193,7 +190,7 @@ def obtain_scores(samples, data_name, n_sampling=1):
     all_samples = []
     correctnesses = []
     for sample in samples:
-        scores = [sample["pred"][i] == sample["gt"] for i in range(len(sample["pred"]))]
+        scores = [verify(sample["pred"][i], sample["gt"]) for i in range(len(sample["pred"]))]
         correctnesses.append(scores[0])
         sample.update({"score": scores})
         all_samples.append(sample)
