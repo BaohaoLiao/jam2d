@@ -141,21 +141,24 @@ def parse_gt(example, data_name):
     return str(parsed_gt_ans[0]).lower()
 
 def extract_pred_and_parse(code, data_name):
-    pred = parse(
-        code, 
-        extraction_config=[
-            LatexExtractionConfig(
-                boxed_match_priority=0, 
-                try_extract_without_anchor=True,
-            ),
-        ]
-    )
-    if pred:
-        return str(pred[0]).lower()
+    if "boxed" in code:
+        pred = parse(
+            code, 
+            extraction_config=[
+                LatexExtractionConfig(
+                    boxed_match_priority=0, 
+                    try_extract_without_anchor=True,
+                ),
+            ]
+        )
+        if pred:
+            return str(pred[0]).lower()
+        else:
+            return ""
     else:
         return ""
 
-def obtain_scores(samples, data_name):
+def obtain_scores(samples, data_name, n_sampling=1):
     all_samples = []
     correctnesses = []
     for sample in samples:
@@ -166,9 +169,18 @@ def obtain_scores(samples, data_name):
 
     result_json = {
         "num_samples": len(correctnesses),
-        "acc": sum(correctnesses) / len(correctnesses),
+        "acc": f"{sum(correctnesses) / len(correctnesses):.2f}",
     }
+
+    """
+    if n_sampling > 1:
+        new_all_samples = []
+        for sample in all_samples:
+    """
+
     return all_samples, result_json
+
+
 
 
 def main(llm, tokenizer, data_name, args):
