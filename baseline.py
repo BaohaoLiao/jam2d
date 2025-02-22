@@ -169,7 +169,7 @@ def obtain_scores(samples, data_name, n_sampling=1):
 
     result_json = {
         "num_samples": len(correctnesses),
-        "acc": f"{sum(correctnesses) / len(correctnesses):.2f}",
+        "acc": float(f"{sum(correctnesses) / len(correctnesses):.2f}"),
     }
 
     """
