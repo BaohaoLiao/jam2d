@@ -84,7 +84,7 @@ def prepare_data(data_name, args):
     output_dir = args.output_dir
     if not os.path.exists(output_dir):
         output_dir = f"outputs/{output_dir}"
-    out_file = f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}.jsonl"
+    out_file = f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}_sampling{args.n_sampling}.jsonl"
     os.makedirs(f"{output_dir}/{data_name}", exist_ok=True)
 
     return examples, out_file
@@ -141,7 +141,6 @@ def parse_gt(example, data_name):
     return str(parsed_gt_ans[0]).lower()
 
 def extract_pred_and_parse(code, data_name):
-    print(code)
     pred = parse(
         code, 
         extraction_config=[
