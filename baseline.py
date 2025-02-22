@@ -198,11 +198,21 @@ def obtain_scores(samples, data_name, n_sampling=1):
         orig_gt = sample["gt"]
         sample.pop("pred")
         sample.pop("gt")
+
+        new_preds = []
+        for i in range(len(orig_preds)):
+            if scores[i]:
+                new_preds.append(str(orig_gt[0]))
+            else:
+                if orig_preds[i]:
+                    new_preds.append(str(orig_preds[i][0]))
+                else:
+                    new_preds.append("")
+
         sample.update({
             "gt": str(orig_gt[0]),
-            "pred": [str(pred[0]) if pred else "" for pred in orig_preds]
+            "pred": new_preds
         })
-
         all_samples.append(sample)
 
     result_json = {
