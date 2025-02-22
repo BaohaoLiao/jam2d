@@ -127,9 +127,9 @@ def is_multi_choice(answer):
             return False
     return True
 
-def parse_gt(gt_ans, data_name):
+def parse_gt(example, data_name):
     parsed_gt_ans = parse(
-        "$" + gt_ans + "$", 
+        "$" + example["answer"] + "$", 
         extraction_config=[
             LatexExtractionConfig(
                 boxed_match_priority=0, 
@@ -137,8 +137,6 @@ def parse_gt(gt_ans, data_name):
             ),
         ]
     )
-    if len(parsed_gt_ans) == 0:
-        print("???????", gt_ans)
     assert len(parsed_gt_ans) > 0
     return parsed_gt_ans
 
@@ -186,8 +184,8 @@ def main(llm, tokenizer, data_name, args):
         example["question"] = parse_question(example, data_name)
         if example["question"] == "":
             continue
-        gt_cot, gt_ans = parse_ground_truth(example, data_name)
-        gt_ans = parse_gt(gt_ans, data_name)
+        gt_cot, _ = parse_ground_truth(example, data_name)
+        gt_ans = parse_gt(example, data_name)
         example["gt_ans"] = gt_ans
         full_prompt = construct_prompt(example, data_name, args)
 
