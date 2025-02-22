@@ -129,10 +129,10 @@ def is_multi_choice(answer):
 
 def parse_gt(example, data_name):
     parsed_gt_ans = parse(
-        "$" + example["answer"] + "$", 
+        "$" + example["answer"] + "$", # latex format
         extraction_config=[
             LatexExtractionConfig(
-                boxed_match_priority=0, 
+                boxed_match_priority=0,
                 try_extract_without_anchor=True,
             ),
         ]
@@ -251,6 +251,7 @@ def main(llm, tokenizer, data_name, args):
     outputs = [output.outputs[0].text for output in outputs]
     assert len(outputs) == len(current_prompts)
 
+    end_prompts = []
     for (i, query), output in zip(current_prompts, outputs):
         output = output.rstrip()
         query += output
