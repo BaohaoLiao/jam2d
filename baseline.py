@@ -280,11 +280,9 @@ def main(llm, tokenizer, data_name, args):
         all_samples.append(sample)
 
     # add processed samples
-    all_samples, result_json = evaluate(
-        samples=all_samples,
-        data_name=data_name,
-        prompt_type=args.prompt_type,
-        execute=True,
+    all_samples, result_json = obtain_scores(
+        samples=all_samples, 
+        data_name=data_name
     )
 
     # save outputs
