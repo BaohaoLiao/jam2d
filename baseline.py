@@ -110,6 +110,7 @@ def setup(args):
 
     # add "avg" result to data_list and results
     if args.n_sampling == 1:
+        print("accuracy:")
         data_list.append("avg")
         results.append(
             {
@@ -122,6 +123,7 @@ def setup(args):
         print("\t".join(data_name.ljust(pad, " ") for data_name in data_list))
         print("\t".join([f"{result['acc']:.2f}".ljust(pad, " ") for result in results]))
     else:
+        print(f"maj@{args.n_sampling} accuracy:")
         data_list.append("avg")
         results.append(
             {
