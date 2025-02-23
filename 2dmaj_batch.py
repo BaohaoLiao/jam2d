@@ -178,13 +178,32 @@ def extract_pred_and_parse(code, data_name):
         return []
 
 
+def get_last_most_common(lst):
+    # Get counts of all elements
+    counts = Counter(lst)
+    max_count = max(counts.values())
+    
+    # Get all elements with maximum count
+    most_common = [item for item, count in counts.items() if count == max_count]
+    
+    # If only one most common element, return it
+    if len(most_common) == 1:
+        return most_common[0]
+    
+    # If tie, find the last occurrence
+    for item in reversed(lst):
+        if item in most_common:
+            return item
+
+
 def get_most_common_pred_score(preds, scores):
     valid_pairs = [(pred, score) for pred, score in zip(preds, scores) if pred != ""]
     if not valid_pairs:
         return "", False
     
     valid_preds = [pair[0] for pair in valid_pairs]
-    most_common_pred = Counter(valid_preds).most_common(1)[0][0]
+    most_common_pred = get_last_most_common(valid_preds)
+    #Counter(valid_preds).most_common(1)[0][0]
     for pred, score in valid_pairs:
         if pred == most_common_pred:
             return pred, score
