@@ -196,7 +196,7 @@ def get_last_most_common(lst):
             return item
 
 
-def get_most_common_pred_score(preds, scores):
+def get_most_common_pred_score_in_thinking(preds, scores):
     valid_pairs = [(pred, score) for pred, score in zip(preds, scores) if pred != ""]
     if not valid_pairs:
         return "", False
@@ -204,6 +204,19 @@ def get_most_common_pred_score(preds, scores):
     valid_preds = [pair[0] for pair in valid_pairs]
     most_common_pred = get_last_most_common(valid_preds)
     #Counter(valid_preds).most_common(1)[0][0]
+    for pred, score in valid_pairs:
+        if pred == most_common_pred:
+            return pred, score
+    return "", False
+
+
+def get_most_common_pred_score(preds, scores):
+    valid_pairs = [(pred, score) for pred, score in zip(preds, scores) if pred != ""]
+    if not valid_pairs:
+        return "", False
+    
+    valid_preds = [pair[0] for pair in valid_pairs]
+    most_common_pred = Counter(valid_preds).most_common(1)[0][0]
     for pred, score in valid_pairs:
         if pred == most_common_pred:
             return pred, score
@@ -281,7 +294,7 @@ def obtain_2d_sub_scores_and_preds(gt, sub_preds):
     maj_preds = []
     maj_scores = []
     for preds, scores in zip(new_sub_preds, sub_scores):
-        pred, score = get_most_common_pred_score(preds, scores)
+        pred, score = get_most_common_pred_score_in_thinking(preds, scores)
         maj_preds.append(pred)
         maj_scores.append(score)
     
