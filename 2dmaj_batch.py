@@ -285,7 +285,7 @@ def obtain_2d_scores(samples, data_name, n_sampling=1):
         new_all_samples = []
         maj_correctnesses = []
         for sample in all_samples:
-            print(sample["sub_preds"], sample["sub_scores"], sample["pred"], sample["score"])
+            print("###", sample["sub_preds"], sample["sub_scores"], sample["pred"], sample["score"])
             maj_pred, maj_score = get_most_common_pred_score(sample["pred"], sample["score"])
             sample.update({"maj_pred": maj_pred, "maj_score": maj_score})
             new_all_samples.append(sample)
@@ -459,7 +459,6 @@ def main(llm, tokenizer, data_name, args):
                 "pred": maj_preds,
                 "score": maj_scores,
             })
-            print(new_gt, sub_preds, sub_scores, maj_preds, maj_scores)
             all_samples.append(sample)
 
         # add processed samples
