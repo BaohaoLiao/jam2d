@@ -447,7 +447,7 @@ def main(llm, tokenizer, data_name, args):
             sample.pop("prompt")
 
 
-            new_gt, sub_preds, sub_scores, maj_preds, maj_scores = obtain_2d_sub_scores_and_preds(sample["gt"], preds)
+            new_gt, sub_preds, sub_scores, maj_preds, maj_scores = obtain_2d_sub_scores_and_preds(sample["gt"], sample_preds)
             sample.pop("gt")
             sample.update({
                 "completion": code,
@@ -458,6 +458,7 @@ def main(llm, tokenizer, data_name, args):
                 "pred": maj_preds,
                 "score": maj_scores,
             })
+            print(new_gt, sub_preds, sub_scores, maj_preds, maj_scores)
             all_samples.append(sample)
 
         # add processed samples
