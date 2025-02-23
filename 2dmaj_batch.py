@@ -410,11 +410,10 @@ def main(llm, tokenizer, data_name, args):
                 ori_think_sums.append(code.split("</think>")[-1])
         
         reasonings_tok = [tokenizer.encode(code.split("</think>")[0])[1:] for code in codes]
-        print(reasonings_tok)
         new_prompts = []
-        for ori_prompt, reasoning in zip(prompts, reasonings_tok):
+        for r, reasoning in enumerate(reasonings_tok):
             splits = [reasoning[: i * len(reasoning) // args.num_think_chunks] for i in range(1, len(args.num_think_chunks))]  # cut evenly
-            new_prompts.extend([ori_prompt + tokenizer.decode(split) + "\n</think>\n\n" for split in splits])
+            new_prompts.extend([prompts[r] + tokenizer.decode(split) + "\n</think>\n\n" for split in splits])
 
         new_outputs = llm.generate(
             new_prompts,
