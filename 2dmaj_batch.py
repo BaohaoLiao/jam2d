@@ -149,15 +149,26 @@ def is_multi_choice(answer):
     return True
 
 def parse_gt(example, data_name):
-    parsed_gt_ans = parse(
-        example["gt_cot"],
-        extraction_config=[
-            LatexExtractionConfig(
-                boxed_match_priority=0,
-                try_extract_without_anchor=True,
-            ),
-        ]
-    )
+    if data_name in ["math500", "math500_level1", "math500_level2", "math500_level3", "math500_level4", "math500_level5"]:
+        parsed_gt_ans = parse(
+            example["gt_cot"],
+            extraction_config=[
+                LatexExtractionConfig(
+                    boxed_match_priority=0,
+                    try_extract_without_anchor=True,
+                ),
+            ]
+        )
+    elif data_name in ["aime24", "aime25", "aimo2"]:
+        parsed_gt_ans = parse(
+            "$" + example["answer"] + "$",
+            extraction_config=[
+                LatexExtractionConfig(
+                    boxed_match_priority=0,
+                    try_extract_without_anchor=True,
+                ),
+            ]
+        )
     assert len(parsed_gt_ans) > 0
     return parsed_gt_ans
 
