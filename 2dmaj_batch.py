@@ -412,8 +412,7 @@ def main(llm, tokenizer, data_name, args):
         reasonings_tok = [tokenizer.encode(code.split("</think>")[0])[1:] for code in codes]
         new_prompts = []
         for r, reasoning in enumerate(reasonings_tok):
-            print("####", len(reasoning))
-            splits = [reasoning[: i * len(reasoning) // args.num_think_chunks] for i in range(1, len(args.num_think_chunks))]  # cut evenly
+            splits = [reasoning[: i * len(reasoning) // args.num_think_chunks] for i in range(1, args.num_think_chunks)]  # cut evenly
             new_prompts.extend([prompts[r] + tokenizer.decode(split) + "\n</think>\n\n" for split in splits])
 
         new_outputs = llm.generate(
