@@ -259,6 +259,9 @@ def obtain_2d_sub_scores_and_preds(gt, sub_preds):
                     new_sub_pred.append("")
         new_sub_preds.append(new_sub_pred)
 
+    print(sub_preds)
+    print(sub_scores)
+
     maj_preds = []
     maj_scores = []
     for preds, scores in zip(sub_preds, sub_scores):
