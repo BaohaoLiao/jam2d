@@ -52,6 +52,11 @@ def parse_args():
         action="store_true",
         help="Few shot for multiple-choice questions, zero shot for others.",
     )
+
+    # 2D maj
+    parser.add_argument("--num_think_chunks", default=1, type=int)
+    parser.add_argument("--max_tokens_per_answer", default=512, type=int)
+
     args = parser.parse_args()
     args.top_p = (
         1 if args.temperature == 0 else args.top_p
@@ -144,26 +149,15 @@ def is_multi_choice(answer):
     return True
 
 def parse_gt(example, data_name):
-    if data_name in ["math500", "math500_level1", "math500_level2", "math500_level3", "math500_level4", "math500_level5"]:
-        parsed_gt_ans = parse(
-            example["gt_cot"],
-            extraction_config=[
-                LatexExtractionConfig(
-                    boxed_match_priority=0,
-                    try_extract_without_anchor=True,
-                ),
-            ]
-        )
-    elif data_name in ["aime24", "aime25", "aimo2"]:
-        parsed_gt_ans = parse(
-            "$" + example["answer"] + "$",
-            extraction_config=[
-                LatexExtractionConfig(
-                    boxed_match_priority=0,
-                    try_extract_without_anchor=True,
-                ),
-            ]
-        )
+    parsed_gt_ans = parse(
+        example["gt_cot"],
+        extraction_config=[
+            LatexExtractionConfig(
+                boxed_match_priority=0,
+                try_extract_without_anchor=True,
+            ),
+        ]
+    )
     assert len(parsed_gt_ans) > 0
     return parsed_gt_ans
 
@@ -243,7 +237,6 @@ def obtain_scores(samples, data_name, n_sampling=1):
         result_json["maj_acc"] = float(f"{sum(maj_correctnesses) / len(maj_correctnesses):.4f}") * 100
         all_samples = new_all_samples
 
-    print(result_json)
     return all_samples, result_json
 
 
@@ -327,43 +320,45 @@ def main(llm, tokenizer, data_name, args):
         ),
     )
     outputs = sorted(outputs, key=lambda x: int(x.request_id))  # sort outputs by request_id
-    outputs = [output.outputs[0].text for output in outputs]
-    assert len(outputs) == len(current_prompts)
+    codes = [output.outputs[0].text for output in outputs]
+    assert len(codes) == len(current_prompts)
 
-    end_prompts = []
-    for (i, query), output in zip(current_prompts, outputs):
-        output = output.rstrip()
-        query += output
-        end_prompts.append((i, query))
-    end_prompts = sorted(end_prompts, key=lambda x: x[0])
+    # original
+    if args.num_think_chunks == 1:
+        # extract preds
+        results = [extract_pred_and_parse(code, data_name) for code in codes]
+        time_use = time.time() - start_time
 
-    # remove input_prompt from end_prompt
-    codes = []
-    assert len(input_prompts) == len(end_prompts)
-    for i in range(len(input_prompts)):
-        _, end_prompt = end_prompts[i]
-        code = end_prompt.split(input_prompts[i])[-1].strip()
-        codes.append(code)
+        # put results back to examples
+        all_samples = []
+        for i, sample in enumerate(samples):
+            code = codes[i * args.n_sampling : (i + 1) * args.n_sampling]
+            preds = results[i * args.n_sampling : (i + 1) * args.n_sampling]
+            sample.pop("prompt")
+            sample.update({"completion": code, "pred": preds})
+            all_samples.append(sample)
 
-    # extract preds
-    results = [extract_pred_and_parse(code, data_name) for code in codes]
-    time_use = time.time() - start_time
+        # add processed samples
+        all_samples, result_json = obtain_scores(
+            samples=all_samples, 
+            data_name=data_name,
+            n_sampling=args.n_sampling,
+        )
 
-    # put results back to examples
-    all_samples = []
-    for i, sample in enumerate(samples):
-        code = codes[i * args.n_sampling : (i + 1) * args.n_sampling]
-        preds = results[i * args.n_sampling : (i + 1) * args.n_sampling]
-        sample.pop("prompt")
-        sample.update({"completion": code, "pred": preds})
-        all_samples.append(sample)
+    # 2D majority voting
+    else:
+        ori_think_sums = []
+        for code in codes:
+            if len(code.split("</think>")) == 1:
+                ori_think_sums.append(code)
+            else:
+                ori_think_sums.append(code.split("</think>")[-1])
+        
+        tok_reasonings = [tokenizer.encode(code.split("</think>")[0])[1:] for code in codes]
+        
 
-    # add processed samples
-    all_samples, result_json = obtain_scores(
-        samples=all_samples, 
-        data_name=data_name,
-        n_sampling=args.n_sampling,
-    )
+
+
 
     # save outputs
     save_jsonl(all_samples, out_file)
