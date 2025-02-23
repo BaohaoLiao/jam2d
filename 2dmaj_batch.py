@@ -261,7 +261,7 @@ def obtain_2d_sub_scores_and_preds(gt, sub_preds):
 
     maj_preds = []
     maj_scores = []
-    for preds, scores in sub_preds, sub_scores:
+    for preds, scores in zip(sub_preds, sub_scores):
         pred, score = get_most_common_pred_score(preds, scores)
         maj_preds.append(pred)
         maj_scores.append(score)
