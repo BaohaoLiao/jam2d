@@ -240,6 +240,61 @@ def obtain_scores(samples, data_name, n_sampling=1):
     return all_samples, result_json
 
 
+def obtain_2d_sub_scores_and_preds(gt, sub_preds):
+    sub_scores = []
+    for sub_pred in sub_preds:
+        sub_scores.append([verify(gt, pred) for pred in sub_pred])
+
+    new_gt =str(gt[0])
+    new_sub_preds = []
+    for i, sub_pred in enumerate(sub_preds):
+        new_sub_pred = []
+        for j, score in enumerate(sub_scores[i]):
+            if score:
+                new_sub_pred.append(new_gt)
+            else:
+                if sub_pred[j]:
+                    new_sub_pred.append(str(sub_pred[j][0]))
+                else:
+                    new_sub_pred.append("")
+        new_sub_preds.append(new_sub_pred)
+
+    maj_preds = []
+    maj_scores = []
+    for preds, scores in sub_preds, sub_scores:
+        pred, score = get_most_common_pred_score(preds, scores)
+        maj_preds.append(pred)
+        maj_scores.append(score)
+    
+    return new_gt, sub_preds, sub_scores, maj_preds, maj_scores
+
+
+def obtain_2d_scores(samples, data_name, n_sampling=1):
+    all_samples = []
+    correctnesses = []
+    for sample in samples:
+        scores = sample["score"]
+        correctnesses.append(scores[0])
+
+    result_json = {
+        "num_samples": len(correctnesses),
+        "acc": float(f"{sum(correctnesses) / len(correctnesses):.4f}") * 100,
+    }
+
+    if n_sampling > 1:
+        new_all_samples = []
+        maj_correctnesses = []
+        for sample in all_samples:
+            maj_pred, maj_score = get_most_common_pred_score(sample["pred"], sample["score"])
+            sample.update({"maj_pred": maj_pred, "maj_score": maj_score})
+            new_all_samples.append(sample)
+            maj_correctnesses.append(maj_score)
+
+        result_json["maj_acc"] = float(f"{sum(maj_correctnesses) / len(maj_correctnesses):.4f}") * 100
+        all_samples = new_all_samples
+    return all_samples, result_json
+
+
 def main(llm, tokenizer, data_name, args):
     examples, out_file = prepare_data(data_name, args)
     print("=" * 50)
@@ -354,10 +409,63 @@ def main(llm, tokenizer, data_name, args):
             else:
                 ori_think_sums.append(code.split("</think>")[-1])
         
-        tok_reasonings = [tokenizer.encode(code.split("</think>")[0])[1:] for code in codes]
-        
+        reasonings_tok = [tokenizer.encode(code.split("</think>")[0])[1:] for code in codes]
+        new_prompts = []
+        for ori_prompt, reasoning in zip(prompts, reasonings_tok):
+            splits = [reasoning[: i * len(reasoning) // args.num_think_chunks] for i in range(1, len(args.num_think_chunks))]  # cut evenly
+            new_prompts.extend([ori_prompt + tokenizer.decode(split) + "\n</think>\n\n" for split in splits])
+
+        new_outputs = llm.generate(
+            new_prompts,
+            SamplingParams(
+                temperature=0,
+                top_p=1,
+                max_tokens=args.max_tokens_per_answer,
+                n=1,
+            ),
+        )
+        new_outputs = sorted(new_outputs, key=lambda x: int(x.request_id))
+        inter_think_sums = [output.outputs[0].text for output in new_outputs]
+        assert len(inter_think_sums) == len(new_prompts)
+
+        all_think_sums = []
+        for i in range(len(ori_think_sums)):
+            all_think_sums.extend(
+                 inter_think_sums[i*(args.num_think_chunks-1) : (i+1)*(args.num_think_chunks-1)] + [ori_think_sums[i]]
+            )
+        all_results = [extract_pred_and_parse(think_sum, data_name) for think_sum in all_think_sums]
+        time_use = time.time() - start_time
+
+        # put results back to examples
+        all_samples = []
+        for i, sample in enumerate(samples):
+            code = codes[i * args.n_sampling : (i + 1) * args.n_sampling]
+            think_sums = all_think_sums[i*args.n_sampling*args.num_think_chunks : (i+1)*args.n_sampling*args.num_think_chunks]
+            sample_think_sums = [think_sums[n*args.num_think_chunks:(n+1)*args.num_think_chunks] for n in range(args.n_sampling)]
+            preds = all_results[i*args.n_sampling*args.num_think_chunks : (i+1)*args.n_sampling*args.num_think_chunks]
+            sample_preds = [preds[n*args.num_think_chunks:(n+1)*args.num_think_chunks] for n in range(args.n_sampling)]
+            sample.pop("prompt")
 
 
+            new_gt, sub_preds, sub_scores, maj_preds, maj_scores = obtain_2d_sub_scores_and_preds(sample["gt"], preds)
+            sample.pop("gt")
+            sample.update({
+                "completion": code,
+                "sub_think_sums":sample_think_sums,
+                "gt": new_gt,
+                "sub_preds": sub_preds,
+                "sub_scores": sub_scores,
+                "pred": maj_preds,
+                "score": maj_scores,
+            })
+            all_samples.append(sample)
+
+        # add processed samples
+        all_samples, result_json = obtain_2d_scores(
+            samples=all_samples, 
+            data_name=data_name,
+            n_sampling=args.n_sampling,
+        )
 
 
     # save outputs
