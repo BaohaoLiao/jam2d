@@ -259,19 +259,14 @@ def obtain_2d_sub_scores_and_preds(gt, sub_preds):
                     new_sub_pred.append("")
         new_sub_preds.append(new_sub_pred)
 
-    print(gt)
-    print(sub_preds)
-    print(sub_preds)
-    print(sub_scores)
-
     maj_preds = []
     maj_scores = []
-    for preds, scores in zip(sub_preds, sub_scores):
+    for preds, scores in zip(new_sub_preds, sub_scores):
         pred, score = get_most_common_pred_score(preds, scores)
         maj_preds.append(pred)
         maj_scores.append(score)
     
-    return new_gt, sub_preds, sub_scores, maj_preds, maj_scores
+    return new_gt, new_sub_preds, sub_scores, maj_preds, maj_scores
 
 
 def obtain_2d_scores(samples, data_name, n_sampling=1):
