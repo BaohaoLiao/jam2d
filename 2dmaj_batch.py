@@ -453,7 +453,7 @@ def main(llm, tokenizer, data_name, args):
             sample.pop("gt")
             sample.update({
                 "completion": code,
-                "sub_think_sums":sample_think_sums,
+                "think_sums":sample_think_sums,
                 "gt": new_gt,
                 "sub_preds": sub_preds,
                 "sub_scores": sub_scores,
