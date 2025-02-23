@@ -259,6 +259,8 @@ def obtain_2d_sub_scores_and_preds(gt, sub_preds):
                     new_sub_pred.append("")
         new_sub_preds.append(new_sub_pred)
 
+    print(gt)
+    print(sub_preds)
     print(sub_preds)
     print(sub_scores)
 
