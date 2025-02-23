@@ -275,6 +275,7 @@ def obtain_2d_scores(samples, data_name, n_sampling=1):
     for sample in samples:
         scores = sample["score"]
         correctnesses.append(scores[0])
+        all_samples.append(sample)
 
     result_json = {
         "num_samples": len(correctnesses),
