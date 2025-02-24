@@ -167,6 +167,18 @@ def parse_gt(example, data_name):
                 ),
             ]
         )
+    elif data_name in ["gpqa"]:
+        _, gt_ans = parse_ground_truth(example, data_name)
+        parsed_gt_ans = parse(
+            "$" + gt_ans + "$",
+            extraction_config=[
+                LatexExtractionConfig(
+                    boxed_match_priority=0,
+                    try_extract_without_anchor=True,
+                ),
+            ]
+        )
+
     assert len(parsed_gt_ans) > 0
     return parsed_gt_ans
 
