@@ -83,7 +83,7 @@ def prepare_data(data_name, args):
     examples = examples[args.start : len(examples) if args.end == -1 else args.end]
 
     # get out_file name
-    out_file_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}"
+    out_file_prefix = f"{args.split}_{args.prompt_type}_{args.num_test_sample}_seed{args.seed}_t{args.temperature}_len{args.max_tokens_per_call}"
     output_dir = args.output_dir
     if not os.path.exists(output_dir):
         output_dir = f"outputs/{output_dir}"
