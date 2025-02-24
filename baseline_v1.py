@@ -52,11 +52,7 @@ def parse_args():
         action="store_true",
         help="Few shot for multiple-choice questions, zero shot for others.",
     )
-
-    # 2D maj
-    parser.add_argument("--num_think_chunks", default=1, type=int)
-    parser.add_argument("--max_tokens_per_answer", default=512, type=int)
-
+    parser.add_argument("--num_answers", type=int, default=1)
     args = parser.parse_args()
     args.top_p = (
         1 if args.temperature == 0 else args.top_p
@@ -90,7 +86,7 @@ def prepare_data(data_name, args):
     output_dir = args.output_dir
     if not os.path.exists(output_dir):
         output_dir = f"outputs/{output_dir}"
-    out_file = f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}_chunk{args.num_think_chunks}_sampling{args.n_sampling}.jsonl"
+    out_file = f"{output_dir}/{data_name}/{out_file_prefix}_s{args.start}_e{args.end}_sampling{args.n_sampling}.jsonl"
     os.makedirs(f"{output_dir}/{data_name}", exist_ok=True)
 
     return examples, out_file
@@ -190,38 +186,6 @@ def extract_pred_and_parse(code, data_name):
         return []
 
 
-def get_last_most_common(lst):
-    # Get counts of all elements
-    counts = Counter(lst)
-    max_count = max(counts.values())
-    
-    # Get all elements with maximum count
-    most_common = [item for item, count in counts.items() if count == max_count]
-    
-    # If only one most common element, return it
-    if len(most_common) == 1:
-        return most_common[0]
-    
-    # If tie, find the last occurrence
-    for item in reversed(lst):
-        if item in most_common:
-            return item
-
-
-def get_most_common_pred_score_in_thinking(preds, scores):
-    valid_pairs = [(pred, score) for pred, score in zip(preds, scores) if pred != ""]
-    if not valid_pairs:
-        return "", False
-    
-    valid_preds = [pair[0] for pair in valid_pairs]
-    most_common_pred = get_last_most_common(valid_preds)
-    #Counter(valid_preds).most_common(1)[0][0]
-    for pred, score in valid_pairs:
-        if pred == most_common_pred:
-            return pred, score
-    return "", False
-
-
 def get_most_common_pred_score(preds, scores):
     valid_pairs = [(pred, score) for pred, score in zip(preds, scores) if pred != ""]
     if not valid_pairs:
@@ -262,63 +226,6 @@ def obtain_scores(samples, data_name, n_sampling=1):
             "gt": str(orig_gt[0]),
             "pred": new_preds
         })
-        all_samples.append(sample)
-
-    result_json = {
-        "num_samples": len(correctnesses),
-        "acc": float(f"{sum(correctnesses) / len(correctnesses):.4f}") * 100,
-    }
-
-    if n_sampling > 1:
-        new_all_samples = []
-        maj_correctnesses = []
-        for sample in all_samples:
-            maj_pred, maj_score = get_most_common_pred_score(sample["pred"], sample["score"])
-            sample.update({"maj_pred": maj_pred, "maj_score": maj_score})
-            new_all_samples.append(sample)
-            maj_correctnesses.append(maj_score)
-
-        result_json["maj_acc"] = float(f"{sum(maj_correctnesses) / len(maj_correctnesses):.4f}") * 100
-        all_samples = new_all_samples
-
-    return all_samples, result_json
-
-
-def obtain_2d_sub_scores_and_preds(gt, sub_preds):
-    sub_scores = []
-    for sub_pred in sub_preds:
-        sub_scores.append([verify(gt, pred) for pred in sub_pred])
-
-    new_gt =str(gt[0])
-    new_sub_preds = []
-    for i, sub_pred in enumerate(sub_preds):
-        new_sub_pred = []
-        for j, score in enumerate(sub_scores[i]):
-            if score:
-                new_sub_pred.append(new_gt)
-            else:
-                if sub_pred[j]:
-                    new_sub_pred.append(str(sub_pred[j][0]))
-                else:
-                    new_sub_pred.append("")
-        new_sub_preds.append(new_sub_pred)
-
-    maj_preds = []
-    maj_scores = []
-    for preds, scores in zip(new_sub_preds, sub_scores):
-        pred, score = get_most_common_pred_score_in_thinking(preds, scores)
-        maj_preds.append(pred)
-        maj_scores.append(score)
-    
-    return new_gt, new_sub_preds, sub_scores, maj_preds, maj_scores
-
-
-def obtain_2d_scores(samples, data_name, n_sampling=1):
-    all_samples = []
-    correctnesses = []
-    for sample in samples:
-        scores = sample["score"]
-        correctnesses.append(scores[0])
         all_samples.append(sample)
 
     result_json = {
@@ -426,9 +333,8 @@ def main(llm, tokenizer, data_name, args):
     codes = [output.outputs[0].text for output in outputs]
     assert len(codes) == len(current_prompts)
 
-    # original
-    if args.num_think_chunks == 1:
-        # extract preds
+    # extract preds
+    if args.num_answers == 1:
         results = [extract_pred_and_parse(code, data_name) for code in codes]
         time_use = time.time() - start_time
 
@@ -448,73 +354,9 @@ def main(llm, tokenizer, data_name, args):
             n_sampling=args.n_sampling,
         )
 
-    # 2D majority voting
     else:
-        ori_think_sums = []
-        for code in codes:
-            if len(code.split("</think>")) == 1:
-                ori_think_sums.append(code)
-            else:
-                ori_think_sums.append(code.split("</think>")[-1])
-        
-        reasonings_tok = [tokenizer.encode(code.split("</think>")[0])[1:] for code in codes]
         new_prompts = []
-        for r, reasoning in enumerate(reasonings_tok):
-            splits = [reasoning[: i * len(reasoning) // args.num_think_chunks] for i in range(1, args.num_think_chunks)]  # cut evenly
-            new_prompts.extend([prompts[r] + tokenizer.decode(split) + "\n</think>\n\n" for split in splits])
-
-        new_outputs = llm.generate(
-            new_prompts,
-            SamplingParams(
-                temperature=0,
-                top_p=1,
-                max_tokens=args.max_tokens_per_answer,
-                n=1,
-                skip_special_tokens=False,
-            ),
-        )
-        new_outputs = sorted(new_outputs, key=lambda x: int(x.request_id))
-        inter_think_sums = [output.outputs[0].text for output in new_outputs]
-        assert len(inter_think_sums) == len(new_prompts)
-
-        all_think_sums = []
-        for i in range(len(ori_think_sums)):
-            all_think_sums.extend(
-                 inter_think_sums[i*(args.num_think_chunks-1) : (i+1)*(args.num_think_chunks-1)] + [ori_think_sums[i]]
-            )
-        all_results = [extract_pred_and_parse(think_sum, data_name) for think_sum in all_think_sums]
-        time_use = time.time() - start_time
-
-        # put results back to examples
-        all_samples = []
-        for i, sample in enumerate(samples):
-            code = codes[i * args.n_sampling : (i + 1) * args.n_sampling]
-            think_sums = all_think_sums[i*args.n_sampling*args.num_think_chunks : (i+1)*args.n_sampling*args.num_think_chunks]
-            sample_think_sums = [think_sums[n*args.num_think_chunks:(n+1)*args.num_think_chunks] for n in range(args.n_sampling)]
-            preds = all_results[i*args.n_sampling*args.num_think_chunks : (i+1)*args.n_sampling*args.num_think_chunks]
-            sample_preds = [preds[n*args.num_think_chunks:(n+1)*args.num_think_chunks] for n in range(args.n_sampling)]
-            sample.pop("prompt")
-
-
-            new_gt, sub_preds, sub_scores, maj_preds, maj_scores = obtain_2d_sub_scores_and_preds(sample["gt"], sample_preds)
-            sample.pop("gt")
-            sample.update({
-                "completion": code,
-                "think_sums":sample_think_sums,
-                "gt": new_gt,
-                "sub_preds": sub_preds,
-                "sub_scores": sub_scores,
-                "pred": maj_preds,
-                "score": maj_scores,
-            })
-            all_samples.append(sample)
-
-        # add processed samples
-        all_samples, result_json = obtain_2d_scores(
-            samples=all_samples, 
-            data_name=data_name,
-            n_sampling=args.n_sampling,
-        )
+        for prompt, code in zip(prompts, codes):
 
 
     # save outputs
