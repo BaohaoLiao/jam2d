@@ -182,6 +182,13 @@ PROMPT_TEMPLATES = {
         "{output}",
         "\n\n",
     ),
+    "deepseek-r1-aime": (
+        "<｜begin▁of▁sentence｜>Please reason step by step, and put your final answer within \\boxed{{}}. "
+        "The answer is a non-negative interger. If the answer is greater than 999, output answer modulo 1000 instead."
+        "<｜User｜>{input}<｜Assistant｜><think>\n",
+        "{output}",
+        "\n\n",
+    ),
     "deepseek-r1-no-think": (
         "<｜begin▁of▁sentence｜>Please reason step by step, and put your final answer within \\boxed{{}}."
         "<｜User｜>{input}<｜Assistant｜><think>\n\n</think>",
