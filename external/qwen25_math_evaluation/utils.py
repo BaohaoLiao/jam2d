@@ -188,10 +188,12 @@ PROMPT_TEMPLATES = {
         "{output}",
         "\n\n",
     ),
-     "deepseek-r1-choice": (
-        "<｜begin▁of▁sentence｜>Please reason step by step, and put your final answer within \\boxed{{}}, "
-        "such as \\boxed{{LETTER}}, where LETTER is one of ABCD."
-        "<｜User｜>{input}<｜Assistant｜><think>\n",
+    "deepseek-r1-choice": (
+        "<｜begin▁of▁sentence｜>"
+        "<｜User｜>Answer the following multiple choice question. "
+        "The last line of your response should be of the following format: "
+        "'ANSWER: $LETTER' (without quotes) where LETTER is one of ABCD. "
+        "Think step by step before answering.\n\n{input}<｜Assistant｜><think>\n",
         "{output}",
         "\n\n",
     ),
