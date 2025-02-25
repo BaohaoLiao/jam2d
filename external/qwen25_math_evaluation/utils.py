@@ -189,8 +189,8 @@ PROMPT_TEMPLATES = {
         "\n\n",
     ),
      "deepseek-r1-choice": (
-        "<｜begin▁of▁sentence｜>Please reason step by step, and put your final answer within \\boxed{{LETTER}}, "
-        "where LETTER is one of ABCD."
+        "<｜begin▁of▁sentence｜>Please reason step by step, and put your final answer within \\boxed{{}}, "
+        "such as \\boxed{{LETTER}}, where LETTER is one of ABCD."
         "<｜User｜>{input}<｜Assistant｜><think>\n",
         "{output}",
         "\n\n",
