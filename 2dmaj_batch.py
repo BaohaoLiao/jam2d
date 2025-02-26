@@ -10,7 +10,7 @@ from vllm import LLM, SamplingParams
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from latex2sympy2_extended import NormalizationConfig
-from math_verify import LatexExtractionConfig, parse, verify, ExprExtractionConfig
+from math_verify import LatexExtractionConfig, parse, verify, ExprExtractionConfig, StringExtractionConfig
 
 from external.qwen25_math_evaluation.evaluate import evaluate
 from external.qwen25_math_evaluation.utils import set_seed, load_jsonl, save_jsonl, construct_prompt
@@ -170,12 +170,30 @@ def parse_gt(example, data_name):
                 ),
             ]
         )
+    elif data_name in ["gpqa"]:
+        _, gt_ans = parse_ground_truth(example, data_name)
+        parsed_gt_ans = parse(
+            "$" + gt_ans + "$",
+            extraction_config=[
+                LatexExtractionConfig(
+                    boxed_match_priority=0,
+                    try_extract_without_anchor=True,
+                ),
+            ]
+        )
+
     assert len(parsed_gt_ans) > 0
     return parsed_gt_ans
 
 
 def extract_pred_and_parse(code, data_name):
-    if "boxed" in code:
+    if data_name in ["gpqa"]:
+        pred = parse(
+            code,
+            extraction_config=[StringExtractionConfig(lowercase=False)],
+        )
+        return pred
+    elif "boxed" in code:
         pred = parse(
             code, 
             extraction_config=[
