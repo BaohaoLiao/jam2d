@@ -299,6 +299,7 @@ def obtain_scores(samples, data_name, n_sampling=1):
         result_json["maj_acc"] = float(f"{sum(maj_correctnesses) / len(maj_correctnesses):.4f}") * 100
         all_samples = new_all_samples
 
+    print(result_json)
     return all_samples, result_json
 
 
