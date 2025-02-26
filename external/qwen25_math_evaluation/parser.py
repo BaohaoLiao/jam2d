@@ -678,7 +678,7 @@ def parse_question(example, data_name):
         options = example["choices"]
         assert len(options) == 4
         for i, (label, option) in enumerate(zip("ABCD", options)):
-            options[i] = f"({label}. {str(option).strip()}\n"
+            options[i] = f"{label}. {str(option).strip()}\n"
         options = " ".join(options).strip()
         # question = f"{example['question'].strip()}\nWhat of the following is the right choice? Explain your answer.\n{options}"
         question = f"{example['question'].strip()}\n\n {options}"
