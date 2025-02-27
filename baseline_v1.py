@@ -462,8 +462,8 @@ def main(llm, tokenizer, data_name, args):
         new_outputs = llm.generate(
             new_prompts,
             SamplingParams(
-                temperature=args.temperature,
-                top_p=args.top_p,
+                temperature=0.6,
+                top_p=0.95,
                 max_tokens=args.max_tokens_per_answer,
                 n=1,
                 skip_special_tokens=False,
