@@ -102,6 +102,7 @@ def setup(args):
         pipeline_parallel_size=args.pipeline_parallel_size,
         trust_remote_code=True,
         max_num_seqs=32,
+        seed=args.seed,
     )
     tokenizer = llm.get_tokenizer()
 
@@ -417,6 +418,7 @@ def main(llm, tokenizer, data_name, args):
             max_tokens=args.max_tokens_per_call,
             n=1,
             skip_special_tokens=False,
+            seed=args.seed,
         ),
     )
     outputs = sorted(outputs, key=lambda x: int(x.request_id))  # sort outputs by request_id
@@ -465,6 +467,7 @@ def main(llm, tokenizer, data_name, args):
                 max_tokens=args.max_tokens_per_answer,
                 n=1,
                 skip_special_tokens=False,
+                seed=args.seed,
             ),
         )
         new_outputs = sorted(new_outputs, key=lambda x: int(x.request_id))
